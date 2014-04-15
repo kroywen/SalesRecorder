@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Sales Recorder</string>
+    
+    <string name="sales_entry">Sales Entry</string>
+    <string name="recovery">Recovery</string>
+    <string name="reports">Reports</string>
+    <string name="importing_data">Importing Data</string>
+    <string name="customer">Customer</string>
+    <string name="salesman">Salesman</string>
+    <string name="next">Next</string>
+    <string name="cancel">Cancel</string>
+    <string name="route">Route</string>
+    <string name="product">Product</string>
+    <string name="quantity">Quantity</string>
+    <string name="rate">Rate</string>
+    <string name="total">Total</string>
+    <string name="paid_amount">Paid Amount</string>
+    <string name="balance">Balance</string>
+    <string name="add">Add</string>
+    <string name="detail">Detail</string>
+    <string name="select_quantity">Select Quantity</string>
+    <string name="select_paid_amount">Select Paid Amount</string>
+    <string name="set">Set</string>
+    <string name="add_sales">Add Sales</string>
+    <string name="update_sale">Update Sale</string>
+    <string name="sales_detail">Sales Detail</string> 
+    <string name="back">Back</string>
+    <string name="save">Save</string>
+    <string name="update">Update</string>
+    <string name="delete">Delete</string>
+    <string name="grand_total">Grand Total: %1$.2f</string>
+    <string name="qty">Qty</string>
+    <string name="sales_saved">Sales saved</string>
+    <string name="customer_invoice">Customer Invoice</string>
+    <string name="route_wise_sale">Route Wise Sale</string>
+    <string name="salesman_wise_sale">Salesman Wise Sale</string>
+    <string name="clear_database">Clear Database</string>
+    <string name="export_database">Export Database</string>
+    <string name="database_cleared">Database cleared</string>
+    <string name="database_exported">Database exported to %1$s</string>
+    <string name="error">Error</string>
+    <string name="success">Success</string>
+    <string name="media_not_mounted">SD card is not mounted</string>
+    <string name="media_read_only">SD card has read only access</string>
+    <string name="error_copying_database">Error occured while copying database</string>
+
+</resources>
