@@ -4,7 +4,9 @@ public class Sale {
 	
 	private long saleInvoiceId;
 	private long salesmanId;
+	private String salesmanName;
 	private long customerId;
+	private String customerName;
 	private String saleInvoiceDate;
 	private double paidAmount;
 	private long saleDetailId;
@@ -15,13 +17,16 @@ public class Sale {
 	
 	public Sale() {}
 	
-	public Sale(long saleInvoiceId, long salesmanId, long customerId,
-			String saleInvoiceDate, double paidAmount, long saleDetailId,
-			long productId, String productName, int quantity, double price) 
+	public Sale(long saleInvoiceId, long salesmanId, String salesmanName, 
+			long customerId, String customerName, String saleInvoiceDate, 
+			double paidAmount, long saleDetailId, long productId, 
+			String productName, int quantity, double price) 
 	{
 		this.saleInvoiceId = saleInvoiceId;
 		this.salesmanId = salesmanId;
+		this.salesmanName = salesmanName;
 		this.customerId = customerId;
+		this.customerName = customerName;
 		this.saleInvoiceDate = saleInvoiceDate;
 		this.paidAmount = paidAmount;
 		this.saleDetailId = saleDetailId;
@@ -46,6 +51,14 @@ public class Sale {
 	public void setSalesmanId(long salesmanId) {
 		this.salesmanId = salesmanId;
 	}
+	
+	public String getSalesmanName() {
+		return salesmanName;
+	}
+	
+	public void setSalesmanName(String salesmanName) {
+		this.salesmanName = salesmanName;
+	}
 
 	public long getCustomerId() {
 		return customerId;
@@ -53,6 +66,14 @@ public class Sale {
 
 	public void setCustomerId(long customerId) {
 		this.customerId = customerId;
+	}
+	
+	public String getCustomerName() {
+		return customerName;
+	}
+	
+	public void setCustomerName(String customerName) {
+		this.customerName = customerName;
 	}
 
 	public String getSaleInvoiceDate() {

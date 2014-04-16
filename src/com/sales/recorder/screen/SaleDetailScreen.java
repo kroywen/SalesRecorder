@@ -133,9 +133,7 @@ public class SaleDetailScreen extends BaseScreen implements OnItemClickListener,
 		dbManager.addSales(tempSales.getSales());
 		Toast.makeText(this, R.string.sales_saved, Toast.LENGTH_SHORT).show();
 		tempSales.clear();
-		Intent intent = new Intent(this, MainScreen.class);
-		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		startActivity(intent);
+		showMainScreen();
 	}
 	
 	private void updateTempSale() {

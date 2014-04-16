@@ -24,25 +24,5 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:text="@string/salesman_wise_sale" />
-    
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="15dp"
-        android:background="#cccccc" />
-    
-    <Button
-        android:id="@+id/clearDatabaseBtn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
-        android:text="@string/clear_database" />
-    
-    <Button
-        android:id="@+id/exportDatabaseBtn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="@string/export_database" />
 
 </LinearLayout>

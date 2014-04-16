@@ -19,6 +19,7 @@ import com.sales.recorder.R;
 import com.sales.recorder.model.Customer;
 import com.sales.recorder.model.Product;
 import com.sales.recorder.model.Sale;
+import com.sales.recorder.model.Salesman;
 
 public class AddSalesScreen extends BaseScreen {
 	
@@ -33,8 +34,9 @@ public class AddSalesScreen extends BaseScreen {
 	private Button cancelBtn;
 	private Button detailBtn;
 	
-	private long customerId;
 	private long salesmanId;
+	private Salesman salesman;
+	private long customerId;
 	private Customer customer;
 	private List<Product> products;
 	
@@ -53,6 +55,7 @@ public class AddSalesScreen extends BaseScreen {
 		getIntentData();
 		
 		products = dbManager.getProducts();
+		salesman = dbManager.getSalesmanById(salesmanId);
 		customer = dbManager.getCustomerById(customerId);
 		
 		initializeViews();
@@ -230,8 +233,10 @@ public class AddSalesScreen extends BaseScreen {
 		Sale sale = new Sale(
 			0, 
 			salesmanId,
+			salesman.getSalesmanName(),
 			customerId,
-			df.format(new Date()),
+			customer.getCustomerName(),
+			dateFormatter.format(new Date()),
 			paidAmount,
 			0,
 			product.getProductId(),

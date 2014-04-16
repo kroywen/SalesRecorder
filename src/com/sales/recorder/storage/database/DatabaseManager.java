@@ -16,6 +16,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.sales.recorder.model.Customer;
 import com.sales.recorder.model.Product;
+import com.sales.recorder.model.Recovery;
 import com.sales.recorder.model.Sale;
 import com.sales.recorder.model.Salesman;
 
@@ -42,19 +43,37 @@ public class DatabaseManager {
 			InputStream is = assets.open("Data.xls");
 			Workbook wb = Workbook.getWorkbook(is);
 			
-			insertProducts(wb);
-			insertCustomers(wb);
-			insertCustomerProductPrices(wb);
-			insertSalesmans(wb);
+			db.beginTransaction();
+			for (Sheet sheet : wb.getSheets()) {
+				if (DatabaseHelper.TABLE_PRODUCT
+					.equalsIgnoreCase(sheet.getName())) 
+				{
+					insertProducts(sheet);
+				} else if (DatabaseHelper.TABLE_CUSTOMER
+					.equalsIgnoreCase(sheet.getName())) 
+				{
+					insertCustomers(sheet);
+				} else if (DatabaseHelper.TABLE_CUSTOMER_PRODUCT_PRICES
+					.equalsIgnoreCase(sheet.getName()))
+				{
+					insertCustomerProductPrices(sheet);
+				} else if (DatabaseHelper.TABLE_SALESMAN
+					.equalsIgnoreCase(sheet.getName()))
+				{
+					insertSalesmans(sheet);
+				}
+			}
+			db.setTransactionSuccessful();
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			db.endTransaction();
 		}
 	}
 	
-	private void insertProducts(Workbook wb) {
-		Sheet sheet = wb.getSheet(0);
+	private void insertProducts(Sheet sheet) {
 		int rows = sheet.getRows();
-		for (int i=2; i<rows; i++) {
+		for (int i=1; i<rows; i++) {
 			try {
 				Cell[] row = sheet.getRow(i);
 				ContentValues values = new ContentValues();
@@ -70,10 +89,9 @@ public class DatabaseManager {
 		}
 	}
 	
-	private void insertCustomers(Workbook wb) {
-		Sheet sheet = wb.getSheet(1);
+	private void insertCustomers(Sheet sheet) {
 		int rows = sheet.getRows();
-		for (int i=3; i<rows; i++) {
+		for (int i=1; i<rows; i++) {
 			try {
 				Cell[] row = sheet.getRow(i);
 				ContentValues values = new ContentValues();
@@ -91,10 +109,9 @@ public class DatabaseManager {
 		}
 	}
 	
-	private void insertCustomerProductPrices(Workbook wb) {
-		Sheet sheet = wb.getSheet(2);
+	private void insertCustomerProductPrices(Sheet sheet) {
 		int rows = sheet.getRows();
-		for (int i=2; i<rows; i++) {
+		for (int i=1; i<rows; i++) {
 			try {
 				Cell[] row = sheet.getRow(i);
 				ContentValues values = new ContentValues();
@@ -113,10 +130,9 @@ public class DatabaseManager {
 		}
 	}
 	
-	private void insertSalesmans(Workbook wb) {
-		Sheet sheet = wb.getSheet(3);
+	private void insertSalesmans(Sheet sheet) {
 		int rows = sheet.getRows();
-		for (int i=2; i<rows; i++) {
+		for (int i=1; i<rows; i++) {
 			try {
 				Cell[] row = sheet.getRow(i);
 				ContentValues values = new ContentValues();
@@ -179,6 +195,28 @@ public class DatabaseManager {
 			e.printStackTrace();
 		}
 		return customer;
+	}
+	
+	public Salesman getSalesmanById(long salesmanId) {
+		Salesman salesman = null;
+		try {
+			String selection = DatabaseHelper.KEY_SALESMAN_ID + "=" + salesmanId;
+			Cursor c = db.query(DatabaseHelper.TABLE_SALESMAN, null, 
+				selection, null, null, null, null);
+			if (c != null && c.moveToFirst()) {
+				salesman = new Salesman(
+					c.getLong(c.getColumnIndex(DatabaseHelper.KEY_SALESMAN_ID)),
+					c.getString(c.getColumnIndex(DatabaseHelper.KEY_SALESMAN_NAME)),
+					c.getString(c.getColumnIndex(DatabaseHelper.KEY_ROUTE))
+				);
+			}
+			if (c != null && !c.isClosed()) {
+				c.close();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return salesman;
 	}
 	
 	public List<Salesman> getSalesmans() {
@@ -248,17 +286,116 @@ public class DatabaseManager {
 		return price;
 	}
 	
+	public List<Sale> getSales(String selection) {
+		List<Sale> sales = new ArrayList<Sale>();
+		try {
+			String rawQuery = "select * from " + DatabaseHelper.TABLE_SALE + 
+				" sale inner join " + DatabaseHelper.TABLE_SALE_DETAIL + " detail on " +
+				"(sale." + DatabaseHelper.KEY_SALE_INVOICE_ID + "=detail." + 
+				DatabaseHelper.KEY_SALE_INVOICE_ID + ") where " + selection;
+			Cursor c = db.rawQuery(rawQuery, null);
+			if (c != null && c.moveToFirst()) {
+				do {
+					long productId = c.getLong(c.getColumnIndex(DatabaseHelper.KEY_PRODUCT_ID));
+					long salesmanId = c.getLong(c.getColumnIndex(DatabaseHelper.KEY_SALESMAN_ID));
+					long customerId = c.getLong(c.getColumnIndex(DatabaseHelper.KEY_CUSTOMER_ID));
+					Sale sale = new Sale(
+						c.getLong(c.getColumnIndex(DatabaseHelper.KEY_SALE_INVOICE_ID)),
+						salesmanId,
+						getSalesmanName(salesmanId),
+						customerId,
+						getCustomerName(customerId),
+						c.getString(c.getColumnIndex(DatabaseHelper.KEY_SALE_INVOICE_DATE)),
+						c.getDouble(c.getColumnIndex(DatabaseHelper.KEY_PAID_AMOUNT)),
+						c.getLong(c.getColumnIndex(DatabaseHelper.KEY_SALE_DETAIL_ID)),
+						productId,
+						getProductName(productId),
+						c.getInt(c.getColumnIndex(DatabaseHelper.KEY_QUANTITY)),
+						c.getDouble(c.getColumnIndex(DatabaseHelper.KEY_PRICE))
+					);
+					sales.add(sale);
+				} while (c.moveToNext());
+			}
+			if (c != null && !c.isClosed()) {
+				c.close();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return sales;
+	}
+	
+	private String getProductName(long productId) {
+		String productName = null;
+		try {
+			String[] columns = new String[] { DatabaseHelper.KEY_PRODUCT_NAME };
+			String selection = DatabaseHelper.KEY_PRODUCT_ID + "=" + productId;
+			Cursor c = db.query(DatabaseHelper.TABLE_PRODUCT, columns, selection, null, null, null, null);
+			if (c != null && c.moveToFirst()) {
+				productName = c.getString(c.getColumnIndex(DatabaseHelper.KEY_PRODUCT_NAME));
+			}
+			if (c != null && !c.isClosed()) {
+				c.close();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return productName;
+	}
+	
+	private String getSalesmanName(long salesmanId) {
+		String salesmanName = null;
+		try {
+			String[] columns = new String[] { DatabaseHelper.KEY_SALESMAN_NAME };
+			String selection = DatabaseHelper.KEY_SALESMAN_ID + "=" + salesmanId;
+			Cursor c = db.query(DatabaseHelper.TABLE_SALESMAN, columns, selection, null, null, null, null);
+			if (c != null && c.moveToFirst()) {
+				salesmanName = c.getString(c.getColumnIndex(DatabaseHelper.KEY_SALESMAN_NAME));
+			}
+			if (c != null && !c.isClosed()) {
+				c.close();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return salesmanName;
+	}
+	
+	private String getCustomerName(long customerId) {
+		String customerName = null;
+		try {
+			String[] columns = new String[] { DatabaseHelper.KEY_CUSTOMER_NAME };
+			String selection = DatabaseHelper.KEY_CUSTOMER_ID + "=" + customerId;
+			Cursor c = db.query(DatabaseHelper.TABLE_CUSTOMER, columns, selection, null, null, null, null);
+			if (c != null && c.moveToFirst()) {
+				customerName = c.getString(c.getColumnIndex(DatabaseHelper.KEY_CUSTOMER_NAME));
+			}
+			if (c != null && !c.isClosed()) {
+				c.close();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return customerName;
+	}
+	
 	public void addSales(List<Sale> sales) {
 		if (sales == null || sales.isEmpty()) {
 			return;
 		}
+		double arrears = 0;
+		long customerId = 0, salesmanId = 0;
 		for (Sale sale : sales) {
+			customerId = sale.getCustomerId();
+			salesmanId = sale.getSalesmanId();
+			arrears += sale.getPrice() - sale.getPaidAmount();
 			long saleInvioceId = addSale(sale);
 			if (saleInvioceId != 0) {
 				sale.setSaleInvoiceId(saleInvioceId);
 				addSaleDetail(sale);
 			}
 		}
+		insertOrUpdateArrears(customerId, salesmanId, arrears);
 	}
 	
 	public long addSale(Sale sale) {
@@ -289,6 +426,100 @@ public class DatabaseManager {
 		db.delete(DatabaseHelper.TABLE_SALE, null, null);
 		db.delete(DatabaseHelper.TABLE_SALE_DETAIL, null, null);
 		db.delete(DatabaseHelper.TABLE_RECOVERY, null, null);
+		db.delete(DatabaseHelper.TABLE_ARREARS, null, null);
+	}
+	
+	public double getArrears(long customerId, long salesmanId) {
+		double arrears = 0;
+		try {
+			String selection = DatabaseHelper.KEY_CUSTOMER_ID + "=" + customerId +
+				" and " + DatabaseHelper.KEY_SALESMAN_ID + "=" + salesmanId;
+			Cursor c = db.query(DatabaseHelper.TABLE_ARREARS, null, 
+				selection, null, null, null, null);
+			if (c != null && c.moveToFirst()) {
+				arrears = c.getDouble(c.getColumnIndex(DatabaseHelper.KEY_ARREARS));
+			}
+			if (c != null && !c.isClosed()) {
+				c.close();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return arrears;
+	}
+	
+	public double getRecoveredAmount(long customerId, long salesmanId) {
+		double recoveredAmount = 0;
+		try {
+			String rawQuery = "select sum(" + DatabaseHelper.KEY_RECOVERED_AMOUNT + ") from " +
+				DatabaseHelper.TABLE_RECOVERY + " where " + 
+				DatabaseHelper.KEY_CUSTOMER_ID + "=" + customerId +
+				" and " + DatabaseHelper.KEY_SALESMAN_ID + "=" + salesmanId;
+			Cursor c = db.rawQuery(rawQuery, null);
+			if (c != null && c.moveToFirst()) {
+				recoveredAmount = c.getDouble(0);
+			}
+			if (c != null && !c.isClosed()) {
+				c.close();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return recoveredAmount;
+	}
+	
+	public void insertOrUpdateArrears(long customerId, long salesmanId, double arrears) {
+		if (customerId == 0 || salesmanId == 0) {
+			return;
+		}
+		try {
+			String selection = DatabaseHelper.KEY_CUSTOMER_ID + "=" + customerId +
+				" and " + DatabaseHelper.KEY_SALESMAN_ID + "=" + salesmanId;
+			Cursor c = db.query(DatabaseHelper.TABLE_ARREARS, null, 
+				selection, null, null, null, null);
+			if (c != null && c.moveToFirst()) {
+				double newArrears = arrears + c.getDouble(
+					c.getColumnIndex(DatabaseHelper.KEY_ARREARS));
+				updateArrears(customerId, salesmanId, newArrears);
+			} else {
+				insertArrears(customerId, salesmanId, arrears);
+			}
+			if (c != null && !c.isClosed()) {
+				c.close();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void insertArrears(long customerId, long salesmanId, double arrears) {
+		ContentValues values = new ContentValues();
+		values.put(DatabaseHelper.KEY_CUSTOMER_ID, customerId);
+		values.put(DatabaseHelper.KEY_SALESMAN_ID, salesmanId);
+		values.put(DatabaseHelper.KEY_ARREARS, arrears);
+		db.insert(DatabaseHelper.TABLE_ARREARS, null, values);
+	}
+	
+	public void updateArrears(long customerId, long salesmanId, double arrears) {
+		ContentValues values = new ContentValues();
+		values.put(DatabaseHelper.KEY_CUSTOMER_ID, customerId);
+		values.put(DatabaseHelper.KEY_SALESMAN_ID, salesmanId);
+		values.put(DatabaseHelper.KEY_ARREARS, arrears);
+		String whereClause = DatabaseHelper.KEY_CUSTOMER_ID + "=" + customerId +
+			" and " + DatabaseHelper.KEY_SALESMAN_ID + "=" + salesmanId;
+		db.update(DatabaseHelper.TABLE_ARREARS, values, whereClause, null);
+	}
+	
+	public void addRecovery(Recovery recovery) {
+		if (recovery == null) {
+			return;
+		}
+		ContentValues values = new ContentValues();
+		values.put(DatabaseHelper.KEY_CUSTOMER_ID, recovery.getCustomerId());
+		values.put(DatabaseHelper.KEY_SALESMAN_ID, recovery.getSalesmanId());
+		values.put(DatabaseHelper.KEY_RECOVERED_AMOUNT, recovery.getRecoveredAmount());
+		values.put(DatabaseHelper.KEY_RECOVERY_DATE, recovery.getRecoveryDate());
+		db.insert(DatabaseHelper.TABLE_RECOVERY, null, values);
 	}
 
 }

@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -20,6 +21,7 @@ import com.sales.recorder.storage.Settings;
 import com.sales.recorder.storage.TempSalesManager;
 import com.sales.recorder.storage.database.DatabaseManager;
 
+@SuppressLint("SimpleDateFormat")
 public class BaseScreen extends Activity implements OnClickListener {
 	
 	public static final int UPDATE_SALE_REQUEST_CODE = 0;
@@ -34,8 +36,7 @@ public class BaseScreen extends Activity implements OnClickListener {
 	protected Settings settings;
 	protected TempSalesManager tempSales;
 	
-	@SuppressLint("SimpleDateFormat")
-	protected SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	protected SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MM-yyyy");
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -44,9 +45,9 @@ public class BaseScreen extends Activity implements OnClickListener {
 		settings = Settings.newInstance(this);
 		tempSales = TempSalesManager.getInstance();
 		
-		ActionBar actionBar = getActionBar();
-		if (actionBar != null) {
-			actionBar.setDisplayHomeAsUpEnabled(true);
+		ActionBar actionbar = getActionBar();
+		if (actionbar != null) {
+			actionbar.setDisplayHomeAsUpEnabled(true);
 		}
 		
 		boolean dataImported = settings.getBoolean(Settings.DATA_IMPORTED);
@@ -107,6 +108,10 @@ public class BaseScreen extends Activity implements OnClickListener {
 			.show();
 	}
 	
+	protected void showSuccessDialog(int titleId, int messageId) {
+		showSuccessDialog(getString(titleId), getString(messageId));
+	}
+	
 	protected void showSuccessDialog(String title, String message) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle(R.string.success)
@@ -119,6 +124,12 @@ public class BaseScreen extends Activity implements OnClickListener {
 			})
 			.create()
 			.show();
+	}
+	
+	protected void showMainScreen() {
+		Intent intent = new Intent(this, MainScreen.class);
+		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		startActivity(intent);
 	}
 	
 	class ImportDataTask extends AsyncTask<Void, Void, Void> {

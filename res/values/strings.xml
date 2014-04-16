@@ -6,6 +6,7 @@
     <string name="sales_entry">Sales Entry</string>
     <string name="recovery">Recovery</string>
     <string name="reports">Reports</string>
+    <string name="database">Database</string>
     <string name="importing_data">Importing Data</string>
     <string name="customer">Customer</string>
     <string name="salesman">Salesman</string>
@@ -36,8 +37,9 @@
     <string name="customer_invoice">Customer Invoice</string>
     <string name="route_wise_sale">Route Wise Sale</string>
     <string name="salesman_wise_sale">Salesman Wise Sale</string>
-    <string name="clear_database">Clear Database</string>
+    <string name="import_database">Import Database</string>
     <string name="export_database">Export Database</string>
+    <string name="clear_database">Clear Database</string>
     <string name="database_cleared">Database cleared</string>
     <string name="database_exported">Database exported to %1$s</string>
     <string name="error">Error</string>
@@ -45,5 +47,10 @@
     <string name="media_not_mounted">SD card is not mounted</string>
     <string name="media_read_only">SD card has read only access</string>
     <string name="error_copying_database">Error occured while copying database</string>
+    <string name="arrears">Arrears</string>
+    <string name="recovered_amount">Recovered Amount</string>
+    <string name="select_recovered_amount">Select Recovered Amount</string>
+    <string name="recovery_added">Recovery added</string>
+    <string name="date">Date</string>
 
 </resources>

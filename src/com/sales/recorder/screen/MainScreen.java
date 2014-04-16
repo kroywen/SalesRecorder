@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
 
 import com.sales.recorder.R;
 
@@ -15,6 +14,7 @@ public class MainScreen extends BaseScreen  {
 	private Button salesEntryBtn;
 	private Button recoveryBtn;
 	private Button reportsBtn;
+	private Button databaseBtn;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -22,9 +22,9 @@ public class MainScreen extends BaseScreen  {
 		setContentView(R.layout.main_screen);
 		initializeViews();
 		
-		ActionBar actionBar = getActionBar();
-		if (actionBar != null) {
-			actionBar.setDisplayHomeAsUpEnabled(false);
+		ActionBar actionbar = getActionBar();
+		if (actionbar != null) {
+			actionbar.setDisplayHomeAsUpEnabled(false);
 		}
 	}
 	
@@ -37,6 +37,9 @@ public class MainScreen extends BaseScreen  {
 		
 		reportsBtn = (Button) findViewById(R.id.reportsBtn);
 		reportsBtn.setOnClickListener(this);
+		
+		databaseBtn = (Button) findViewById(R.id.databaseBtn);
+		databaseBtn.setOnClickListener(this);
 	}
 	
 	@Override
@@ -47,10 +50,15 @@ public class MainScreen extends BaseScreen  {
 			startActivity(intent);
 			break;
 		case R.id.recoveryBtn:
-			Toast.makeText(this, "Start Recovery Screen", Toast.LENGTH_SHORT).show();
+			intent = new Intent(this, RecoveryScreen.class);
+			startActivity(intent);
 			break;
 		case R.id.reportsBtn:
 			intent = new Intent(this, ReportsScreen.class);
+			startActivity(intent);
+			break;
+		case R.id.databaseBtn:
+			intent = new Intent(this, DatabaseScreen.class);
 			startActivity(intent);
 			break;
 		}

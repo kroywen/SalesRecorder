@@ -16,6 +16,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	public static final String TABLE_SALE = "Sale";
 	public static final String TABLE_SALE_DETAIL = "SaleDetail";
 	public static final String TABLE_RECOVERY = "Recovery";
+	public static final String TABLE_ARREARS = "Arrears";
 	
 	public static final String KEY_PRODUCT_ID = "ProductId";
 	public static final String KEY_PRODUCT_NAME = "ProductName";
@@ -38,6 +39,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	public static final String KEY_RECOVERY_ID = "RecoveryId";
 	public static final String KEY_RECOVERED_AMOUNT = "RecoveredAmount";
 	public static final String KEY_RECOVERY_DATE = "RecoveryDate";
+	public static final String KEY_ARREARS = "Arrears";
+	public static final String KEY_ARREAR_ID = "ArrearId";
 	
 	public static final String CREATE_TABLE_PRODUCT = 
 		"create table if not exists " + TABLE_PRODUCT + " (" +
@@ -110,6 +113,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	
 	public static final String DROP_TABLE_RECOVERY =
 		"drop table if exists " + TABLE_RECOVERY + ";";
+	
+	public static final String CREATE_TABLE_ARREARS =
+		"create table if not exists " + TABLE_ARREARS + " (" +
+		KEY_ARREAR_ID + " integer primary key autoincrement, " +
+		KEY_CUSTOMER_ID + " integer, " +
+		KEY_SALESMAN_ID + " integer, " +
+		KEY_ARREARS + " real);";
+	
+	public static final String DROP_TABLE_ARREARS =
+		"drop table if exists " + TABLE_ARREARS;
 
 	public DatabaseHelper(Context context) {
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -124,6 +137,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		db.execSQL(CREATE_TABLE_SALE);
 		db.execSQL(CREATE_TABLE_SALE_DETAIL);
 		db.execSQL(CREATE_TABLE_RECOVERY);
+		db.execSQL(CREATE_TABLE_ARREARS);
 	}
 
 	@Override
@@ -135,6 +149,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		db.execSQL(DROP_TABLE_SALE);
 		db.execSQL(DROP_TABLE_SALE_DETAIL);
 		db.execSQL(DROP_TABLE_RECOVERY);
+		db.execSQL(DROP_TABLE_ARREARS);
 		onCreate(db);
 	}
 	
