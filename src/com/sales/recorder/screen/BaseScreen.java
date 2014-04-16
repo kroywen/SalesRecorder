@@ -1,5 +1,6 @@
 package com.sales.recorder.screen;
 
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 
 import android.annotation.SuppressLint;
@@ -9,6 +10,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.AssetManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -52,7 +54,7 @@ public class BaseScreen extends Activity implements OnClickListener {
 		
 		boolean dataImported = settings.getBoolean(Settings.DATA_IMPORTED);
 		if (!dataImported) {
-			new ImportDataTask().execute();
+			new ImportInitialDataTask().execute();
 		}
 	}
 	
@@ -94,27 +96,13 @@ public class BaseScreen extends Activity implements OnClickListener {
 		}
 	}
 	
-	protected void showErrorDialog(int messageId) {
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setTitle(R.string.error)
-			.setMessage(messageId)
-			.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					dialog.dismiss();
-				}
-			})
-			.create()
-			.show();
+	protected void showDialog(int titleId, int messageId) {
+		showDialog(getString(titleId), getString(messageId));
 	}
 	
-	protected void showSuccessDialog(int titleId, int messageId) {
-		showSuccessDialog(getString(titleId), getString(messageId));
-	}
-	
-	protected void showSuccessDialog(String title, String message) {
+	protected void showDialog(String title, String message) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setTitle(R.string.success)
+		builder.setTitle(title)
 			.setMessage(message)
 			.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 				@Override
@@ -132,7 +120,7 @@ public class BaseScreen extends Activity implements OnClickListener {
 		startActivity(intent);
 	}
 	
-	class ImportDataTask extends AsyncTask<Void, Void, Void> {
+	class ImportInitialDataTask extends AsyncTask<Void, Void, Void> {
 		
 		@Override
 		protected void onPreExecute() {
@@ -141,7 +129,13 @@ public class BaseScreen extends Activity implements OnClickListener {
 
 		@Override
 		protected Void doInBackground(Void... params) {
-			dbManager.importData();
+			AssetManager assets = getAssets();
+			try {
+				InputStream is = assets.open("Data.xls");
+				dbManager.importData(is);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			return null;
 		}
 		

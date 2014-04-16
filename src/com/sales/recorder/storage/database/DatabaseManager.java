@@ -1,7 +1,12 @@
 package com.sales.recorder.storage.database;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +15,6 @@ import jxl.Sheet;
 import jxl.Workbook;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
@@ -23,11 +27,9 @@ import com.sales.recorder.model.Salesman;
 public class DatabaseManager {
 	
 	private SQLiteDatabase db;
-	private Context context;
 	private NumberFormat nf;
 	
 	private DatabaseManager(Context context) {
-		this.context = context;
 		DatabaseHelper dbHelper = new DatabaseHelper(context);
 		db = dbHelper.getWritableDatabase();
 		nf = NumberFormat.getInstance();
@@ -37,10 +39,12 @@ public class DatabaseManager {
 		return new DatabaseManager(context);
 	}
 	
-	public void importData() {
+	public void importData(File file) throws FileNotFoundException {
+		importData(new FileInputStream(file));
+	}
+	
+	public void importData(InputStream is) {
 		try {
-			AssetManager assets = context.getAssets();
-			InputStream is = assets.open("Data.xls");
 			Workbook wb = Workbook.getWorkbook(is);
 			
 			db.beginTransaction();
@@ -48,7 +52,7 @@ public class DatabaseManager {
 				if (DatabaseHelper.TABLE_PRODUCT
 					.equalsIgnoreCase(sheet.getName())) 
 				{
-					insertProducts(sheet);
+					updateProducts(sheet);
 				} else if (DatabaseHelper.TABLE_CUSTOMER
 					.equalsIgnoreCase(sheet.getName())) 
 				{
@@ -68,83 +72,184 @@ public class DatabaseManager {
 			e.printStackTrace();
 		} finally {
 			db.endTransaction();
+			if (is != null) {
+				try { is.close(); } catch (IOException ex) {}
+			}
 		}
 	}
 	
-	private void insertProducts(Sheet sheet) {
+	private void updateProducts(Sheet sheet) {
 		int rows = sheet.getRows();
+		if (rows <= 1) {
+			return;
+		}
 		for (int i=1; i<rows; i++) {
 			try {
 				Cell[] row = sheet.getRow(i);
-				ContentValues values = new ContentValues();
-				values.put(DatabaseHelper.KEY_PRODUCT_ID, 
-					Long.parseLong(row[0].getContents()));
-				values.put(DatabaseHelper.KEY_PRODUCT_NAME, row[1].getContents());
-				values.put(DatabaseHelper.KEY_STANDARD_PRICE, 
-					nf.parse(row[2].getContents()).doubleValue());
-				db.insert(DatabaseHelper.TABLE_PRODUCT, null, values);
+				long productId = Long.parseLong(row[0].getContents());
+				ContentValues values = prepareProductValues(row);
+				String rawQuery = "select count(*) from " + DatabaseHelper.TABLE_PRODUCT +
+					" where " + DatabaseHelper.KEY_PRODUCT_ID + "=" + productId;
+				Cursor c = db.rawQuery(rawQuery, null);
+				if (c != null && c.moveToFirst()) {
+					int count = c.getInt(0);
+					if (count == 0) {
+						db.insert(DatabaseHelper.TABLE_PRODUCT, null, values);
+					} else {
+						String whereClause = DatabaseHelper.KEY_PRODUCT_ID + "=" + productId;
+						db.update(DatabaseHelper.TABLE_PRODUCT, values, whereClause, null);
+					}	
+				}
+				if (c != null && !c.isClosed()) {
+					c.close();
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	private ContentValues prepareProductValues(Cell[] row) throws ParseException 
+	{
+		ContentValues values = new ContentValues();
+		values.put(DatabaseHelper.KEY_PRODUCT_ID, 
+			Long.parseLong(row[0].getContents()));
+		values.put(DatabaseHelper.KEY_PRODUCT_NAME, row[1].getContents());
+		values.put(DatabaseHelper.KEY_STANDARD_PRICE, 
+			nf.parse(row[2].getContents()).doubleValue());
+		return values;
 	}
 	
 	private void insertCustomers(Sheet sheet) {
 		int rows = sheet.getRows();
+		if (rows <= 1) {
+			return;
+		}
 		for (int i=1; i<rows; i++) {
 			try {
 				Cell[] row = sheet.getRow(i);
-				ContentValues values = new ContentValues();
-				values.put(DatabaseHelper.KEY_CUSTOMER_ID, 
-					Long.parseLong(row[0].getContents()));
-				values.put(DatabaseHelper.KEY_CUSTOMER_NAME, row[1].getContents());
-				values.put(DatabaseHelper.KEY_CONTACT_NO, row[2].getContents());
-				values.put(DatabaseHelper.KEY_ROUTE, row[3].getContents());
-				values.put(DatabaseHelper.KEY_AREARES, 
-					nf.parse(row[4].getContents()).doubleValue());
-				db.insert(DatabaseHelper.TABLE_CUSTOMER, null, values);
+				long customerId = Long.parseLong(row[0].getContents());
+				ContentValues values = prepareCustomerValues(row);
+				String rawQuery = "select count(*) from " + DatabaseHelper.TABLE_CUSTOMER +
+					" where " + DatabaseHelper.KEY_CUSTOMER_ID + "=" + customerId;
+				Cursor c = db.rawQuery(rawQuery, null);
+				if (c != null && c.moveToFirst()) {
+					int count = c.getInt(0);
+					if (count == 0) {
+						db.insert(DatabaseHelper.TABLE_CUSTOMER, null, values);
+					} else {
+						String whereClause = DatabaseHelper.KEY_CUSTOMER_ID + "=" + customerId;
+						db.update(DatabaseHelper.TABLE_CUSTOMER, values, whereClause, null);
+					}	
+				}
+				if (c != null && !c.isClosed()) {
+					c.close();
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	private ContentValues prepareCustomerValues(Cell[] row) throws ParseException
+	{
+		ContentValues values = new ContentValues();
+		values.put(DatabaseHelper.KEY_CUSTOMER_ID, 
+			Long.parseLong(row[0].getContents()));
+		values.put(DatabaseHelper.KEY_CUSTOMER_NAME, row[1].getContents());
+		values.put(DatabaseHelper.KEY_CONTACT_NO, row[2].getContents());
+		values.put(DatabaseHelper.KEY_ROUTE, row[3].getContents());
+		values.put(DatabaseHelper.KEY_AREARES, 
+			nf.parse(row[4].getContents()).doubleValue());
+		return values;
 	}
 	
 	private void insertCustomerProductPrices(Sheet sheet) {
 		int rows = sheet.getRows();
+		if (rows <= 1) {
+			return;
+		}
 		for (int i=1; i<rows; i++) {
 			try {
 				Cell[] row = sheet.getRow(i);
-				ContentValues values = new ContentValues();
-				values.put(DatabaseHelper.KEY_CUSTOMER_PRICE_ID, 
-					Long.parseLong(row[0].getContents()));
-				values.put(DatabaseHelper.KEY_CUSTOMER_ID, 
-					Long.parseLong(row[1].getContents()));
-				values.put(DatabaseHelper.KEY_PRODUCT_ID, 
-					Long.parseLong(row[2].getContents()));
-				values.put(DatabaseHelper.KEY_CUSTOMER_PRICE, 
-					nf.parse(row[3].getContents()).doubleValue());
-				db.insert(DatabaseHelper.TABLE_CUSTOMER_PRODUCT_PRICES, null, values);
+				long customerPriceId = Long.parseLong(row[0].getContents());
+				ContentValues values = prepareCustomerProductPricesValues(row);
+				String rawQuery = "select count(*) from " + 
+					DatabaseHelper.TABLE_CUSTOMER_PRODUCT_PRICES +
+					" where " + DatabaseHelper.KEY_CUSTOMER_PRICE_ID + "=" + customerPriceId;
+				Cursor c = db.rawQuery(rawQuery, null);
+				if (c != null && c.moveToFirst()) {
+					int count = c.getInt(0);
+					if (count == 0) {
+						db.insert(DatabaseHelper.TABLE_CUSTOMER_PRODUCT_PRICES, null, values);
+					} else {
+						String whereClause = DatabaseHelper.KEY_CUSTOMER_PRICE_ID + "=" + 
+							customerPriceId;
+						db.update(DatabaseHelper.TABLE_CUSTOMER_PRODUCT_PRICES, values, whereClause, null);
+					}	
+				}
+				if (c != null && !c.isClosed()) {
+					c.close();
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 	}
 	
+	private ContentValues prepareCustomerProductPricesValues(Cell[] row) 
+		throws ParseException 
+	{
+		ContentValues values = new ContentValues();
+		values.put(DatabaseHelper.KEY_CUSTOMER_PRICE_ID, 
+			Long.parseLong(row[0].getContents()));
+		values.put(DatabaseHelper.KEY_CUSTOMER_ID, 
+			Long.parseLong(row[1].getContents()));
+		values.put(DatabaseHelper.KEY_PRODUCT_ID, 
+			Long.parseLong(row[2].getContents()));
+		values.put(DatabaseHelper.KEY_CUSTOMER_PRICE, 
+			nf.parse(row[3].getContents()).doubleValue());
+		return values;
+	}
+	
 	private void insertSalesmans(Sheet sheet) {
 		int rows = sheet.getRows();
+		if (rows <= 1) {
+			return;
+		}
 		for (int i=1; i<rows; i++) {
 			try {
 				Cell[] row = sheet.getRow(i);
-				ContentValues values = new ContentValues();
-				values.put(DatabaseHelper.KEY_SALESMAN_ID, 
-					Long.parseLong(row[0].getContents()));
-				values.put(DatabaseHelper.KEY_SALESMAN_NAME, row[1].getContents());
-				values.put(DatabaseHelper.KEY_ROUTE, row[2].getContents());
-				db.insert(DatabaseHelper.TABLE_SALESMAN, null, values);
+				long salesmanId = Long.parseLong(row[0].getContents());
+				ContentValues values = prepareSalesmanValues(row);
+				String rawQuery = "select count(*) from " + DatabaseHelper.TABLE_SALESMAN +
+					" where " + DatabaseHelper.KEY_SALESMAN_ID + "=" + salesmanId;
+				Cursor c = db.rawQuery(rawQuery, null);
+				if (c != null && c.moveToFirst()) {
+					int count = c.getInt(0);
+					if (count == 0) {
+						db.insert(DatabaseHelper.TABLE_SALESMAN, null, values);
+					} else {
+						String whereClause = DatabaseHelper.KEY_SALESMAN_ID + "=" + salesmanId;
+						db.update(DatabaseHelper.TABLE_SALESMAN, values, whereClause, null);
+					}	
+				}
+				if (c != null && !c.isClosed()) {
+					c.close();
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	private ContentValues prepareSalesmanValues(Cell[] row) throws ParseException {
+		ContentValues values = new ContentValues();
+		values.put(DatabaseHelper.KEY_SALESMAN_ID, 
+			Long.parseLong(row[0].getContents()));
+		values.put(DatabaseHelper.KEY_SALESMAN_NAME, row[1].getContents());
+		values.put(DatabaseHelper.KEY_ROUTE, row[2].getContents());
+		return values;
 	}
 	
 	public List<Customer> getCustomers() {
