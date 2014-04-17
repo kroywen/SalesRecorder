@@ -65,15 +65,18 @@ public final class R {
         public static final int main_screen=0x7f030005;
         public static final int recovery_screen=0x7f030006;
         public static final int reports_screen=0x7f030007;
-        public static final int sale_detail_screen=0x7f030008;
-        public static final int sales_detail_header=0x7f030009;
-        public static final int sales_detail_list_item=0x7f03000a;
-        public static final int salesman_wise_sale_list_header=0x7f03000b;
-        public static final int salesman_wise_sale_list_item=0x7f03000c;
-        public static final int salesman_wise_sale_screen=0x7f03000d;
-        public static final int select_customer_salesman_screen=0x7f03000e;
-        public static final int select_number_dialog=0x7f03000f;
-        public static final int update_sale_screen=0x7f030010;
+        public static final int route_wise_sale_list_header=0x7f030008;
+        public static final int route_wise_sale_list_item=0x7f030009;
+        public static final int route_wise_sale_screen=0x7f03000a;
+        public static final int sale_detail_screen=0x7f03000b;
+        public static final int sales_detail_header=0x7f03000c;
+        public static final int sales_detail_list_item=0x7f03000d;
+        public static final int salesman_wise_sale_list_header=0x7f03000e;
+        public static final int salesman_wise_sale_list_item=0x7f03000f;
+        public static final int salesman_wise_sale_screen=0x7f030010;
+        public static final int select_customer_salesman_screen=0x7f030011;
+        public static final int select_number_dialog=0x7f030012;
+        public static final int update_sale_screen=0x7f030013;
     }
     public static final class string {
         public static final int add=0x7f040011;

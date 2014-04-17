@@ -60,6 +60,10 @@
             android:name="com.sales.recorder.screen.SalesmanWiseSaleScreen"
             android:screenOrientation="landscape" />
         
+        <activity 
+            android:name="com.sales.recorder.screen.RouteWiseSaleScreen"
+            android:screenOrientation="landscape" />
+        
         <activity
             android:name="com.sales.recorder.screen.DatabaseScreen"
             android:screenOrientation="portrait" />

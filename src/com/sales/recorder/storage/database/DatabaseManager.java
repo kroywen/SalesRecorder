@@ -8,7 +8,10 @@ import java.io.InputStream;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import jxl.Cell;
 import jxl.Sheet;
@@ -625,6 +628,94 @@ public class DatabaseManager {
 		values.put(DatabaseHelper.KEY_RECOVERED_AMOUNT, recovery.getRecoveredAmount());
 		values.put(DatabaseHelper.KEY_RECOVERY_DATE, recovery.getRecoveryDate());
 		db.insert(DatabaseHelper.TABLE_RECOVERY, null, values);
+	}
+	
+	public List<String> getRoutes() {
+		Set<String> routes = new HashSet<String>();
+		try {
+			String[] columns = new String[] { DatabaseHelper.KEY_ROUTE };
+			Cursor c1 = db.query(true, DatabaseHelper.TABLE_CUSTOMER, columns, 
+				null, null, null, null, null, null, null);
+			if (c1 != null && c1.moveToFirst()) {
+				do {
+					String route = c1.getString(c1.getColumnIndex(DatabaseHelper.KEY_ROUTE)); 
+					routes.add(route);
+				} while (c1.moveToNext());
+			}
+			if (c1 != null && !c1.isClosed()) {
+				c1.close();
+			}
+			Cursor c2 = db.query(true, DatabaseHelper.TABLE_SALESMAN, columns, 
+				null, null, null, null, null, null, null);
+			if (c2 != null && c2.moveToFirst()) {
+				do {
+					String route = c2.getString(c2.getColumnIndex(DatabaseHelper.KEY_ROUTE)); 
+					routes.add(route);
+				} while (c2.moveToNext());
+			}
+			if (c2 != null && !c2.isClosed()) {
+				c2.close();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		ArrayList<String> result = new ArrayList<String>(routes);
+		Collections.sort(result);
+		return result;
+	}
+	
+	public String getCustomerIDs(String route) {
+		StringBuilder sb = new StringBuilder();
+		sb.append('(');
+		try {
+			String[] columns = new String[] { DatabaseHelper.KEY_CUSTOMER_ID };
+			String selection = DatabaseHelper.KEY_ROUTE + "='" + route + "'";
+			Cursor c = db.query(DatabaseHelper.TABLE_CUSTOMER, columns, 
+				selection, null, null, null, null);
+			if (c != null && c.moveToFirst()) {
+				do {
+					long id = c.getLong(c.getColumnIndex(DatabaseHelper.KEY_CUSTOMER_ID));
+					sb.append(id);
+					if (!c.isLast()) {
+						sb.append(',');
+					}
+				} while (c.moveToNext());
+			}
+			if (c != null && !c.isClosed()) {
+				c.close();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		sb.append(')');
+		return sb.toString();
+	}
+	
+	public String getSalesmanIDs(String route) {
+		StringBuilder sb = new StringBuilder();
+		sb.append('(');
+		try {
+			String[] columns = new String[] { DatabaseHelper.KEY_SALESMAN_ID };
+			String selection = DatabaseHelper.KEY_ROUTE + "='" + route + "'";
+			Cursor c = db.query(DatabaseHelper.TABLE_SALESMAN, columns, 
+				selection, null, null, null, null);
+			if (c != null && c.moveToFirst()) {
+				do {
+					long id = c.getLong(c.getColumnIndex(DatabaseHelper.KEY_SALESMAN_ID));
+					sb.append(id);
+					if (!c.isLast()) {
+						sb.append(',');
+					}
+				} while (c.moveToNext());
+			}
+			if (c != null && !c.isClosed()) {
+				c.close();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		sb.append(')');
+		return sb.toString();
 	}
 
 }

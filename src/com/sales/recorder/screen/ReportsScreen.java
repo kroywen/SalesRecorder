@@ -40,7 +40,8 @@ public class ReportsScreen extends BaseScreen {
 			startActivity(intent);
 			break;
 		case R.id.routeWiseSaleBtn:
-			// TODO
+			intent = new Intent(this, RouteWiseSaleScreen.class);
+			startActivity(intent);
 			break;
 		case R.id.salesmanWiseSaleBtn:
 			intent = new Intent(this, SalesmanWiseSaleScreen.class);
